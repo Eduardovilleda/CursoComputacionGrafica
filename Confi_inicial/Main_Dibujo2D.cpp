@@ -1,3 +1,10 @@
+/*
+Practica 2: Dibujo de primitivas          Villeda Tlecuitl José Eduardo
+Entrega: 14/02/25                                    39281998
+
+*/
+
+
 #include<iostream>
 
 //#define GLEW_STATIC
