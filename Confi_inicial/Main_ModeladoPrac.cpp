@@ -1,6 +1,6 @@
 //Practica 4 Modelado geometrico           
-//  Villeda Tlecuitl José Eduardo
-// 27/02/25                             
+//  Villeda Tlecuitl JosÃ© Eduardo
+// 28/02/25                             
 // 319281998
 
 
@@ -31,7 +31,7 @@ float movZ=-5.0f;
 float rot = 0.0f;
 int main() {
 	glfwInit();
-	//Verificación de compatibilidad 
+	//VerificaciÃ³n de compatibilidad 
 	// Set all the required options for GLFW
 	/*glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -46,7 +46,7 @@ int main() {
 
 	glfwGetFramebufferSize(window, &screenWidth, &screenHeight);
 
-	//Verificación de errores de creacion  ventana
+	//VerificaciÃ³n de errores de creacion  ventana
 	if (nullptr == window)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -58,7 +58,7 @@ int main() {
 	glfwMakeContextCurrent(window);
 	glewExperimental = GL_TRUE;
 
-	//Verificación de errores de inicialización de glew
+	//VerificaciÃ³n de errores de inicializaciÃ³n de glew
 
 	if (GLEW_OK != glewInit()) {
 		std::cout << "Failed to initialise GLEW" << std::endl;
@@ -412,15 +412,15 @@ int main() {
 
 		// Pierna 1 
 		model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(0.2f, 0.3f, 0.2f)); // Tamaño de la pata
-		model = glm::translate(model, glm::vec3(-1.0f, -3.85f, 0.0f)); // Posición de la pata
+		model = glm::scale(model, glm::vec3(0.2f, 0.3f, 0.2f)); // TamaÃ±o de la pata
+		model = glm::translate(model, glm::vec3(-1.0f, -3.85f, 0.0f)); // PosiciÃ³n de la pata
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 36, 36);
 
 		// Pierna 2 
 		model = glm::mat4(1.0f);
-		model = glm::scale(model, glm::vec3(0.2f, 0.3f, 0.2f)); // Tamaño de la pata
-		model = glm::translate(model, glm::vec3(1.0f, -3.85f, 0.0f)); // Posición de la pata
+		model = glm::scale(model, glm::vec3(0.2f, 0.3f, 0.2f)); // TamaÃ±o de la pata
+		model = glm::translate(model, glm::vec3(1.0f, -3.85f, 0.0f)); // PosiciÃ³n de la pata
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		glDrawArrays(GL_TRIANGLES, 36, 36);
 		// 
