@@ -1,3 +1,9 @@
+//Villeda Tlecuitl Jose Eduardo
+// Texturizado
+//Fecha 16/03/25
+// 319281998
+
+
 
 #include <iostream>
 #include <cmath>
