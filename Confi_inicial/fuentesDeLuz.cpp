@@ -1,3 +1,11 @@
+//Villeda Tlecuitl Jose Eduardo
+// Fuentes de luz
+//Fecha 30/03/25
+// 319281998
+
+
+
+
 #include <iostream>
 #include <cmath>
 
