@@ -1,10 +1,12 @@
-//Villeda Tlecuitl Jose Eduardo
-//319281998
-//Materiales e iluminación
-//25/03/2025
+////Practica 8 Materiales e Iluminaciones        
+//  Villeda Tlecuitl José Eduardo
+// 30/03/25                             
+// 319281998
+
 
 // Std. Includes
 #include <string>
+#include <iostream>
 
 // GLEW
 #include <GL/glew.h>
@@ -25,8 +27,9 @@
 // Other Libs
 #include "SOIL2/SOIL2.h"
 #include "stb_image.h"
+
 // Properties
-const GLuint WIDTH = 800, HEIGHT = 600;
+const GLuint WIDTH = 1200, HEIGHT = 650;
 int SCREEN_WIDTH, SCREEN_HEIGHT;
 
 // Function prototypes
@@ -34,28 +37,25 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 void MouseCallback(GLFWwindow* window, double xPos, double yPos);
 void DoMovement();
 
-
 // Camera
-Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 bool keys[1024];
 GLfloat lastX = 400, lastY = 300;
 bool firstMouse = true;
 
-
 // Light attributes
-glm::vec3 lightPos(0.5f, 0.5f, 2.5f);
+glm::vec3 lightPos(0.9f, 0.5f, 0.0f);       // Posición del sol
+glm::vec3 secondLightPos(0.5f, 0.5f, 0.0f); // Posición de la luna
+
+float reloj = 0.0f; // Reloj para el ciclo día/noche
 float movelightPos = 0.0f;
 GLfloat deltaTime = 0.0f;
 GLfloat lastFrame = 0.0f;
 float rot = 0.0f;
 bool activanim = false;
+bool modoDia = true; // Comienza en modo día
 
-float moveLightPosY = 0.0f; // Movimiento en Y
-float moveLightPosZ = 0.0f; // Movimiento en Z
-
-
-int main()
-{
+int main() {
     // Init GLFW
     glfwInit();
     // Set all the required options for GLFW
@@ -65,59 +65,64 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    // Create a GLFWwindow object that we can use for GLFW's functions
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Materiales e Iluminacion - Jose Edaurdo Villeda Tlecuitl", nullptr, nullptr);
+    // Create a GLFWwindow object
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Practica 8: Materiales e Iluminacion - Villeda Tlecuitl Jose", nullptr, nullptr);
 
-    if (nullptr == window)
-    {
+    if (nullptr == window) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-
         return EXIT_FAILURE;
     }
 
     glfwMakeContextCurrent(window);
-
     glfwGetFramebufferSize(window, &SCREEN_WIDTH, &SCREEN_HEIGHT);
 
-    // Set the required callback functions
+    // Set callback functions
     glfwSetKeyCallback(window, KeyCallback);
     glfwSetCursorPosCallback(window, MouseCallback);
 
-    // GLFW Options
-    //glfwSetInputMode( window, GLFW_CURSOR, GLFW_CURSOR_DISABLED );
-
-    // Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
+    // Initialize GLEW
     glewExperimental = GL_TRUE;
-    glm::vec3 lightPos(0.5f, 0.5f, 2.5f);  // Fuente de luz principal
-    glm::vec3 secondLightPos(-1.0f, 1.0f, -3.0f);  // Segunda fuente de luz
-    // Initialize GLEW to setup the OpenGL Function pointers
-    if (GLEW_OK != glewInit())
-    {
+    if (GLEW_OK != glewInit()) {
         std::cout << "Failed to initialize GLEW" << std::endl;
         return EXIT_FAILURE;
     }
 
-    // Define the viewport dimensions
+    // Define viewport
     glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-
-    // OpenGL options
     glEnable(GL_DEPTH_TEST);
 
-    // Setup and compile our shaders
+    // Setup shaders
     Shader shader("Shader/modelLoading.vs", "Shader/modelLoading.frag");
     Shader lampshader("Shader/lamp.vs", "Shader/lamp.frag");
     Shader lightingShader("Shader/lighting.vs", "Shader/lighting.frag");
 
-
-
     // Load models
-    Model red_dog((char*)"Models/Alacran/tripo_convert_aaf33b86-c178-4995-b815-e40f8490d1a6.obj");
-    Model per_neg((char*)"Models/P/1.obj");
+    Model dog((char*)"Models/RedDog.obj");
+
+    Model desert((char*)"Models/Desierto/tripo_convert_ad64926a-302a-4f75-bf9e-152e88c3016e.obj");
+
+    Model camel((char*)"Models/Camello/tripo_convert_f5e35d79-3cde-4afb-b061-c75830ee1e2e.obj");
+
+    Model familia((char*)"Models/Familia/tripo_convert_0654c96e-611d-46c4-bb48-4a28ef5e4b7d.obj");
+
+    Model captus((char*)"Models/Captus/tripo_convert_38ffb5cc-29f8-4cc7-b186-93601266c293.obj");
+
+    Model iguana((char*)"Models/Iguana/tripo_convert_7e139703-e2dc-49d9-b4f1-5093681d1302.obj");
+
+    Model Alacran((char*)"Models/Alacran/tripo_convert_aaf33b86-c178-4995-b815-e40f8490d1a6.obj");
+
+    Model luna((char*)"Models/Una/tripo_convert_2ed32cdb-5128-4834-9316-d7e660e6a7fe.obj");
+
+    Model moon((char*)"Models/Luna/Moon.obj");
+
+    Model sun((char*)"Models/Sol/Sun.obj");
+
     glm::mat4 projection = glm::perspective(camera.GetZoom(), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
+    // Cube vertices for light sources
     float vertices[] = {
-      -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
          0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
          0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
          0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -160,63 +165,6 @@ int main()
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
 
-    // Definir un cubo para representar la luz
-    float lightCubeVertices[] = {
-        -0.5f, -0.5f, -0.5f,  // Frente
-         0.5f, -0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-
-        -0.5f, -0.5f,  0.5f,  // Atrás
-         0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
-
-        -0.5f,  0.5f,  0.5f,  // Arriba
-        -0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-
-        -0.5f, -0.5f,  0.5f,  // Abajo
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
-
-        0.5f, -0.5f, -0.5f,  // Derecha
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f, -0.5f,
-
-        -0.5f, -0.5f, -0.5f,  // Izquierda
-        -0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f, -0.5f
-    };
-
-    GLuint lightCubeVAO, lightCubeVBO;
-    glGenVertexArrays(1, &lightCubeVAO);
-    glGenBuffers(1, &lightCubeVBO);
-    glBindVertexArray(lightCubeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, lightCubeVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(lightCubeVertices), lightCubeVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    glBindVertexArray(0);
-
-
-
     // First, set the container's VAO (and VBO)
     GLuint VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -230,238 +178,228 @@ int main()
     // normal attribute
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
 
-
-
-    // Load textures
-
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    int textureWidth, textureHeight, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char* image;
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-
-    image = stbi_load("Models/Alacran/tripo_convert_aaf33b86-c178-4995-b815-e40f8490d1a6.obj", &textureWidth, &textureHeight, &nrChannels, 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    if (image)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(image);
-
-
-    while (!glfwWindowShouldClose(window))
-    {
-        // Set frame time
+    // Game loop
+    while (!glfwWindowShouldClose(window)) {
+        // Calculate delta time
         GLfloat currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        // Check and call events
+        // Check events
         glfwPollEvents();
         DoMovement();
 
-        // Clear the colorbuffer and depth buffer
+        // Clear buffers
+        //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Usar el shader de iluminación para dibujar los modelos
+        // Set lighting shader
         lightingShader.Use();
         GLint lightPosLoc = glGetUniformLocation(lightingShader.Program, "light.position");
+        GLint lightPosLoc2 = glGetUniformLocation(lightingShader.Program, "light2.position");
         GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
-        glUniform3f(lightPosLoc, lightPos.x + movelightPos, lightPos.y + movelightPos, lightPos.z + movelightPos);
+
+        // Movimiento del sol
+        lightPos.x = cos(reloj) * 5.0f; // Movimiento en el eje X
+        lightPos.y = sin(reloj) * 5.0f; // Movimiento en el eje Y
+
+        // Movimiento de la luna (opuesto al sol)
+        secondLightPos.x = -cos(reloj) * 5.0f; // Movimiento en el eje X
+        secondLightPos.y = -sin(reloj) * 5.0f; // Movimiento en el eje Y
+
+        // Set light positions and view pos
+        glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+        glUniform3f(lightPosLoc2, secondLightPos.x, secondLightPos.y, secondLightPos.z);
         glUniform3f(viewPosLoc, camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 
-        // Configurar primer cubo
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "light.position"), lightPos.x, lightPos.y, lightPos.z);
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "secondLight.ambient"), 0.2f, 0.2f, 0.4f); // Azul tenue
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "secondLight.diffuse"), 0.3f, 0.3f, 0.8f); // Azul brillante
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "secondLight.specular"), 0.5f, 0.5f, 1.0f); // Destellos azulados
+        // Dia 
+        if (modoDia) {
+            // Sun properties (warm light)
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light.ambient"), 0.4f, 0.4f, 0.3f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light.diffuse"), 1.0f, 0.8f, 0.6f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light.specular"), 0.8f, 0.6f, 0.4f);
+        }
+        else {
+            // Turn off sun
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light.ambient"), 0.0f, 0.0f, 0.0f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light.diffuse"), 0.0f, 0.0f, 0.0f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light.specular"), 0.0f, 0.0f, 0.0f);
+        }
 
+        // Noche
+        if (!modoDia) {
+            // Moon properties (cool light)
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.ambient"), 0.1f, 0.1f, 0.2f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.diffuse"), 0.6f, 0.7f, 0.9f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.specular"), 0.5f, 0.6f, 0.7f);
+        }
+        else {
+            // Turn off moon
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.ambient"), 0.0f, 0.0f, 0.0f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.diffuse"), 0.0f, 0.0f, 0.0f);
+            glUniform3f(glGetUniformLocation(lightingShader.Program, "light2.specular"), 0.0f, 0.0f, 0.0f);
+        }
 
-        // Configurar la segunda fuente de luz 2do cubo
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "secondLight.position"), secondLightPos.x + movelightPos, secondLightPos.y, secondLightPos.z);
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "secondLight.ambient"), 0.4f, 0.4f, 0.4f); // Luz tenue blanca
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "secondLight.diffuse"), 0.8f, 0.8f, 0.8f); // Luz blanca fuerte
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "secondLight.specular"), 1.0f, 1.0f, 1.0f); // Destellos blancos intensos
-
-        // Pasar otros uniformes que ya usas (como la posición de la cámara)
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "viewPos"), camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
-
+        // Set projection and view matrices
         glm::mat4 view = camera.GetViewMatrix();
         glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
-        //  material properties
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.ambient"), 0.2f, 0.2f, 0.2f);
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.diffuse"), 0.5f, 0.0f, 0.0f); // Rojo
-        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.specular"), 0.7f, 0.7f, 0.7f); // Brillo fuerte
-        glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 32.0f); // Reflejo definido
-
-        // tansla del ala   
-        glm::mat4 model(1.0f);
-        model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));  // Mover el modelo a la derecha
-        model = glm::scale(model, glm::vec3(2.0f, 2.0f, 2.0f));  // Escalar el modelo
-        glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        per_neg.Draw(lightingShader);  // Dibuja el modelo per_neg
-
-        // Dibuja el modelo 
-        glm::mat4 red_dogModel(1.0f);
-        red_dogModel = glm::scale(red_dogModel, glm::vec3(5.0f, 5.0f, 5.0f));  // Escalar el modelo
-        glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(red_dogModel));
-        red_dog.Draw(lightingShader);  // Dibuja el modelo 
-
-       
-        lampshader.Use();
+        // Set material properties
+        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.ambient"), 0.2f, 0.2f, 0.2f); // Gris oscuro
+        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.diffuse"), 0.8f, 0.75f, 0.7f); // Ligero tono cálido
+        glUniform3f(glGetUniformLocation(lightingShader.Program, "material.specular"), 0.4f, 0.4f, 0.4f); // Reflejos moderados
+        glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 100.0f); // Brillantez moderada
 
         
-        glDisable(GL_DEPTH_TEST);
 
-        glm::mat4 modelLight1(1.0f);
-        modelLight1 = glm::translate(modelLight1, lightPos + glm::vec3(movelightPos, 0.0f, 0.0f));  // Posición de la primera fuente de luz
-        modelLight1 = glm::scale(modelLight1, glm::vec3(0.3f));  // Escala del primer cubo de luz (sin cambios, tamaño original)
+        // Alacran
+        glm::mat4 model(1);
+        model = glm::translate(model, glm::vec3(-0.4f, -0.5f, 2.25f));
+        model = glm::scale(model, glm::vec3(0.08f, 0.08f, 0.08f));
+        model = glm::rotate(model, -1.5708f, glm::vec3(0.0f, -12.0f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(lightingShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        glBindVertexArray(VAO);
+        Alacran.Draw(shader);
 
-        glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelLight1));
-        glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        // Dog
+        glm::mat4 modelDog = glm::mat4(1.0f);
+        modelDog = glm::translate(modelDog, glm::vec3(0.0f, -0.41f, 2.0f));
+        modelDog = glm::scale(modelDog, glm::vec3(0.4f, 0.4f, 0.4f));
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelDog));
+        dog.Draw(shader);
 
-        glBindVertexArray(lightCubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);  // Dibuja el primer cubo de luz
-        glBindVertexArray(0);
+        // Desierto
+        glm::mat4 modelDesert = glm::mat4(1.0f);
+        modelDesert = glm::translate(modelDesert, glm::vec3(0.0f, -0.1f, 1.0f));
+        modelDesert = glm::scale(modelDesert, glm::vec3(4.5f, 4.5f, 4.5f));
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelDesert));
+        desert.Draw(shader);
 
-        // Volver a habilitar la prueba de profundidad después de renderizar el cubo de luz
-        glEnable(GL_DEPTH_TEST);
+        // Camello
+        glm::mat4 modelCamello = glm::mat4(1.0f);
+        modelCamello = glm::translate(modelCamello, glm::vec3(-1.3f, -0.35f, 1.1f));
+        modelCamello = glm::scale(modelCamello, glm::vec3(0.5f, 0.5f, 0.5f));
+        modelCamello = glm::rotate(modelCamello, 1.5708f, glm::vec3(0.0f, -12.0f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelCamello));
+        camel.Draw(shader);
 
+        // Familia
+        glm::mat4 modelFamilia = glm::mat4(1.0f);
+        modelFamilia = glm::translate(modelFamilia, glm::vec3(0.0f, -0.34f, 1.8f));
+        modelFamilia = glm::scale(modelFamilia, glm::vec3(0.5f, 0.5f, 0.5f));
+        modelFamilia = glm::rotate(modelFamilia, 1.5708f, glm::vec3(0.0f, -12.0f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelFamilia));
+        familia.Draw(shader);
 
-        // Dibujar el segundo cubo de luz (secondLight) desplazado en el eje X
-        lampshader.Use();
+        // Captus
+        glm::mat4 modelCaptus = glm::mat4(1.0f);
+        modelCaptus = glm::translate(modelCaptus, glm::vec3(1.0f, -0.29f, 1.0f));
+        modelCaptus = glm::scale(modelCaptus, glm::vec3(0.45f, 0.45f, 0.45f));
+        modelCaptus = glm::rotate(modelCaptus, 1.5708f, glm::vec3(0.0f, -12.0f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelCaptus));
+        captus.Draw(shader);
 
-        // Desactivar la prueba de profundidad para el cubo de luz (para hacerlo siempre visible)
-        glDisable(GL_DEPTH_TEST);
+        // Iguana
+        glm::mat4 modelIguana = glm::mat4(1.0f);
+        modelIguana = glm::translate(modelIguana, glm::vec3(0.4f, -0.5f, 2.25f));
+        modelIguana = glm::scale(modelIguana, glm::vec3(0.18f, 0.18f, 0.18f));
+        modelIguana = glm::rotate(modelIguana, -1.5708f, glm::vec3(0.0f, -12.0f, 0.0f));
+        glUniformMatrix4fv(glGetUniformLocation(shader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelIguana));
+        iguana.Draw(shader);
 
-        glm::mat4 modelLight2(1.0f);
-        modelLight2 = glm::translate(modelLight2, secondLightPos + glm::vec3(movelightPos + 0.0f, -0.5f, 1.0f));  // Desplazamos ligeramente el cubo 2 en el eje X para separarlos
-        modelLight2 = glm::scale(modelLight2, glm::vec3(0.3f));  // Escala del segundo cubo de luz
+        // Render sun
+        glm::mat4 modelSun = glm::mat4(1.0f);
+        modelSun = glm::translate(modelSun, lightPos);
+        modelSun = glm::scale(modelSun, glm::vec3(0.7f));
+        glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelSun));
+        sun.Draw(lampshader);
 
-        glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelLight2));
-        glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        // Render moon
+        glm::mat4 modelMoon = glm::mat4(1.0f);
+        modelMoon = glm::translate(modelMoon, secondLightPos);
+        modelMoon = glm::scale(modelMoon, glm::vec3(1.0f));
+        modelMoon = glm::scale(modelMoon, glm::vec3(0.4));
+        glUniformMatrix4fv(glGetUniformLocation(lampshader.Program, "model"), 1, GL_FALSE, glm::value_ptr(modelMoon));
+        moon.Draw(lampshader);
 
-        glBindVertexArray(lightCubeVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);  // Dibuja el segundo cubo de luz
-        glBindVertexArray(0);
-
-        // Volver a habilitar la prueba de profundidad después de renderizar el cubo de luz
-        glEnable(GL_DEPTH_TEST);
-
-
-
-        // Intercambiar los buffers para mostrar la escena renderizada
+        // Swap buffers
         glfwSwapBuffers(window);
     }
 
-
-
+    // Clean up
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-
     glfwTerminate();
     return 0;
 }
 
-
-// Función para mover la cámara
-void DoMovement()
-{
-    // Cámara controla el movimiento según las teclas presionadas
-    if (keys[GLFW_KEY_W] || keys[GLFW_KEY_UP])
-    {
+// Moves/alters the camera positions based on user input
+void DoMovement() {
+    // Camera controls
+    if (keys[GLFW_KEY_W] || keys[GLFW_KEY_UP]) {
         camera.ProcessKeyboard(FORWARD, deltaTime);
     }
 
-    if (keys[GLFW_KEY_S] || keys[GLFW_KEY_DOWN])
-    {
+    if (keys[GLFW_KEY_S] || keys[GLFW_KEY_DOWN]) {
         camera.ProcessKeyboard(BACKWARD, deltaTime);
     }
 
-    if (keys[GLFW_KEY_A] || keys[GLFW_KEY_LEFT])
-    {
+    if (keys[GLFW_KEY_A] || keys[GLFW_KEY_LEFT]) {
         camera.ProcessKeyboard(LEFT, deltaTime);
     }
 
-    if (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT])
-    {
+    if (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT]) {
         camera.ProcessKeyboard(RIGHT, deltaTime);
     }
 
-    if (activanim)
-    {
+    if (activanim) {
         if (rot > -90.0f)
             rot -= 0.1f;
     }
 }
 
 // Is called whenever a key is pressed/released via GLFW
-void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
-    if (GLFW_KEY_ESCAPE == key && GLFW_PRESS == action)
-    {
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode) {
+    if (GLFW_KEY_ESCAPE == key && GLFW_PRESS == action) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
 
-    if (key >= 0 && key < 1024)
-    {
-        if (action == GLFW_PRESS)
-        {
+    if (key >= 0 && key < 1024) {
+        if (action == GLFW_PRESS) {
             keys[key] = true;
         }
-        else if (action == GLFW_RELEASE)
-        {
+        else if (action == GLFW_RELEASE) {
             keys[key] = false;
         }
     }
 
-    if (keys[GLFW_KEY_R])
-    {
-
-        movelightPos += 0.1f;
+    // Controls for sun position
+    if (keys[GLFW_KEY_R]) {
+        reloj += 0.01f;  //Incrementa
     }
-
-    if (keys[GLFW_KEY_F])
-    {
-
-        movelightPos -= 0.1f;
+    if (keys[GLFW_KEY_F]) {
+        reloj -= 0.01f;  // Decrementa
     }
-
-
 }
 
-// Función para manejar el movimiento del ratón
-void MouseCallback(GLFWwindow* window, double xPos, double yPos)
-{
-    if (firstMouse)
-    {
+void MouseCallback(GLFWwindow* window, double xPos, double yPos) {
+    if (firstMouse) {
         lastX = xPos;
         lastY = yPos;
         firstMouse = false;
     }
 
     GLfloat xOffset = xPos - lastX;
-    GLfloat yOffset = lastY - yPos;  // Reverso ya que las coordenadas Y aumentan hacia abajo
+    GLfloat yOffset = lastY - yPos;
 
     lastX = xPos;
     lastY = yPos;
 
     camera.ProcessMouseMovement(xOffset, yOffset);
 }
+
+
