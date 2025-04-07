@@ -1,7 +1,7 @@
 //Practica 9: Fuentes de Luz
 //Entrega: 06/04/2025
 //Villeda Tlecuitl José Eduardo
-// 422090638
+// 319281998
 
 #include <iostream>
 #include <cmath>
